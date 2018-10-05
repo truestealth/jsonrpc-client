@@ -27,7 +27,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "stealth\\JsonRpc\\Client\\ServiceProvider"
+                "stealth\\JsonRpcClient\\ServiceProvider"
             ]
         }
     }
