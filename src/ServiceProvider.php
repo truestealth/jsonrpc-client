@@ -1,6 +1,6 @@
 <?php
 
-namespace Tochka\JsonRpcClient;
+namespace stealth\JsonRpcClient;
 
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
@@ -22,6 +22,11 @@ class ServiceProvider extends BaseServiceProvider
 
     public function register()
     {
-        // TODO: Implement register() method.
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/jsonrpcclient.php', 'jsonrpcclient'
+        );
+        if (\is_lumen()) {
+            $this->app->configure('jsonrpcclient');
+        }
     }
 }

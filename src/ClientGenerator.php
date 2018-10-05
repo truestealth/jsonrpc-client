@@ -1,6 +1,6 @@
 <?php
 
-namespace Tochka\JsonRpcClient;
+namespace stealth\JsonRpcClient;
 
 use Illuminate\Console\Command;
 
@@ -117,7 +117,7 @@ class ClientGenerator extends Command
      */
     protected function checkGenerator($smd)
     {
-        if (empty($smd->generator) || $smd->generator !== 'Tochka/JsonRpc') {
+        if (empty($smd->generator) || $smd->generator !== 'stealth/JsonRpc') {
             $this->output->note('The host is using an unsupported JsonRpc server. There is a possibility of incorrect work of the client.');
         }
     }
@@ -178,8 +178,8 @@ class ClientGenerator extends Command
 
 namespace {$classInfo['namespace']};
 
-use Tochka\JsonRpcClient\Client;
-use Tochka\JsonRpcClient\Response;
+use stealth\JsonRpcClient\Client;
+use stealth\JsonRpcClient\Response;
 
 /**
  * {$classDescription}

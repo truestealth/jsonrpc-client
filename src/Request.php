@@ -1,10 +1,10 @@
 <?php
 
-namespace Tochka\JsonRpcClient;
+namespace stealth\JsonRpcClient;
 
 /**
  * Class Request
- * @package Tochka\JsonRpcClient
+ * @package stealth\JsonRpcClient
  */
 class Request
 {

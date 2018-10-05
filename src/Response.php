@@ -1,6 +1,6 @@
 <?php
 
-namespace Tochka\JsonRpcClient;
+namespace stealth\JsonRpcClient;
 
 class Response
 {
@@ -10,4 +10,7 @@ class Response
     public $error = null;
     /** @var mixed */
     public $data = null;
+    /** @var mixed */
+    public $uuid = null;
+
 }

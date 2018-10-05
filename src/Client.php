@@ -1,12 +1,12 @@
 <?php
 
-namespace Tochka\JsonRpcClient;
+namespace stealth\JsonRpcClient;
 
 use Illuminate\Support\Facades\Log;
 
 /**
  * Class Client
- * @package Tochka\JsonRpcClient
+ * @package stealth\JsonRpcClient
  *
  * @method static static get(string $serviceName)
  * @method static static batch()
@@ -14,8 +14,7 @@ use Illuminate\Support\Facades\Log;
  * @method static execute()
  * @method static Response call(string $method, array $params)
  */
-class Client
-{
+class Client {
     const CODE_PARSE_ERROR = -32700;
     const CODE_INVALID_REQUEST = -32600;
     const CODE_METHOD_NOT_FOUND = -32601;
@@ -37,15 +36,15 @@ class Client
     const HTTP_AUTH_SAFE = 'safe';
 
     public static $jsonrpc_messages = [
-        self::CODE_PARSE_ERROR                => 'Ошибка обработки запроса',
-        self::CODE_INVALID_REQUEST            => 'Неверный запрос',
-        self::CODE_METHOD_NOT_FOUND           => 'Указанный метод не найден',
-        self::CODE_INVALID_PARAMS             => 'Неверные параметры',
-        self::CODE_INTERNAL_ERROR             => 'Внутренняя ошибка',
-        self::CODE_INVALID_PARAMETERS         => 'Неверные параметры',
-        self::CODE_VALIDATION_ERROR           => 'Ошибка валидации',
-        self::CODE_UNAUTHORIZED               => 'Неверный ключ авторизации',
-        self::CODE_FORBIDDEN                  => 'Доступ запрещен',
+        self::CODE_PARSE_ERROR => 'Ошибка обработки запроса',
+        self::CODE_INVALID_REQUEST => 'Неверный запрос',
+        self::CODE_METHOD_NOT_FOUND => 'Указанный метод не найден',
+        self::CODE_INVALID_PARAMS => 'Неверные параметры',
+        self::CODE_INTERNAL_ERROR => 'Внутренняя ошибка',
+        self::CODE_INVALID_PARAMETERS => 'Неверные параметры',
+        self::CODE_VALIDATION_ERROR => 'Ошибка валидации',
+        self::CODE_UNAUTHORIZED => 'Неверный ключ авторизации',
+        self::CODE_FORBIDDEN => 'Доступ запрещен',
         self::CODE_EXTERNAL_INTEGRATION_ERROR => 'Ошибка внешних сервисов',
         self::CODE_INTERNAL_INTEGRATION_ERROR => 'Ошибка внутренних сервисов',
     ];
@@ -64,21 +63,18 @@ class Client
 
     private $time = 0;
 
-    public function __construct()
-    {
+    public function __construct() {
         $this->requests = [];
         $this->results = [];
     }
 
-    public static function __callStatic($method, $params)
-    {
+    public static function __callStatic($method, $params) {
         $instance = new static();
 
         return $instance->$method(...$params);
     }
 
-    public function __call($method, $params)
-    {
+    public function __call($method, $params) {
         if (method_exists($this, '_' . $method)) {
             return $this->{'_' . $method}(...$params);
         }
@@ -93,8 +89,7 @@ class Client
      *
      * @return $this
      */
-    protected function _get($serviceName)
-    {
+    protected function _get($serviceName) {
         $this->serviceName = $serviceName;
 
         return $this;
@@ -104,8 +99,7 @@ class Client
      * Помечает экземпляр клиента как массив вызовов
      * @return $this
      */
-    protected function _batch()
-    {
+    protected function _batch() {
         $this->requests = [];
         $this->results = [];
         $this->is_batch = true;
@@ -120,8 +114,7 @@ class Client
      *
      * @return $this
      */
-    protected function _cache($minutes = -1)
-    {
+    protected function _cache($minutes = -1) {
         $this->cache = $minutes;
 
         return $this;
@@ -131,12 +124,11 @@ class Client
      * Выполняет удаленный вызов (либо добавляет его в массив)
      *
      * @param string $method
-     * @param array  $params
+     * @param array $params
      *
      * @return Response
      */
-    protected function _call($method, $params)
-    {
+    protected function _call($method, $params) {
         if (!$this->is_batch) {
             $this->requests = [];
             $this->results = [];
@@ -158,8 +150,7 @@ class Client
     /**
      * Выполняет запрос всех вызовов
      */
-    protected function _execute()
-    {
+    protected function _execute() {
         $this->time = microtime(true);
 
         // имя сервиса
@@ -191,7 +182,7 @@ class Client
         foreach ($this->requests as $request) {
             if ($request->hasCache()) {
                 $result = $request->getCache();
-                $this->result($request->getId(), $result->success, $result->data, $result->error);
+                $this->result($request->getId(), $result->success, $result->data, $result->error, $result->uuid);
             } else {
                 $requests[] = $request->getRequest();
             }
@@ -260,15 +251,14 @@ class Client
      *
      * @return bool
      */
-    protected function parseResult($result)
-    {
+    protected function parseResult($result) {
         if (!empty($result->error)) {
             $this->result(!empty($result->id) ? $result->id : null, false, null, $result->error);
 
             return false;
         }
 
-        $this->result(!empty($result->id) ? $result->id : null, true, $result->result);
+        $this->result(!empty($result->id) ? $result->id : null, true, $result->result, false, $result->uidd);
 
         // если надо - кешируем результат
         if (!empty($result->id) && $this->requests[$result->id]->wantCache()) {
@@ -282,16 +272,15 @@ class Client
      * Заполняет результат указанными данными
      *
      * @param string $id ID вызова. Если NULL, то будет заполнен результат всех вызовов
-     * @param bool   $success Успешен ли вызов
+     * @param bool $success Успешен ли вызов
      * @param object $data Ответ вызова
      * @param object $error Текст ошибки
      */
-    protected function result($id, $success, $data = null, $error = null)
-    {
+    protected function result($id, $success, $data = null, $error = null, $uuid = null) {
         if (null === $id) {
             foreach ($this->results as $key => $value) {
                 if (null !== $key) {
-                    $this->result($key, $success, $data, $error);
+                    $this->result($key, $success, $data, $error, $uuid);
                 }
             }
         } else {
@@ -306,11 +295,13 @@ class Client
             if (null !== $error) {
                 $this->results[$id]->error = $error;
             }
+            if (null !== $uuid) {
+                $this->results[$id]->uuid = $uuid;
+            }
         }
     }
 
-    private function getLogInfo($json_request, $json_response)
-    {
+    private function getLogInfo($json_request, $json_response) {
         return 'Request: ' . var_export($json_request, true) . '<br />Response: ' . var_export($json_response, true);
     }
 
@@ -318,8 +309,7 @@ class Client
      * Возвращает имя текущего сервиса
      * @return string
      */
-    public function getServiceName()
-    {
+    public function getServiceName() {
         // имя сервиса
         if ($this->serviceName === null) {
             return config('jsonrpcclient.default');
@@ -335,8 +325,7 @@ class Client
      *
      * @return array
      */
-    public static function getConnectionOptions($serviceName)
-    {
+    public static function getConnectionOptions($serviceName) {
         $headerToken = config('jsonrpcclient.connections.' . $serviceName . '.auth.headerToken', null);
         $httpAuth = config('jsonrpcclient.connections.' . $serviceName . '.auth.http', null);
 
@@ -347,7 +336,7 @@ class Client
             'clientClass' => config('jsonrpcclient.connections.' . $serviceName . '.clientClass'),
             'auth' => [
                 'headerToken' => $headerToken,
-                'http'        => $httpAuth,
+                'http' => $httpAuth,
             ],
         ];
     }
@@ -358,15 +347,14 @@ class Client
      *
      * @return mixed
      */
-    public static function getOldConnectionOptions($serviceName, $headerToken)
-    {
+    public static function getOldConnectionOptions($serviceName, $headerToken) {
         $name = config('jsonrpcclient.connections.' . $serviceName . '.authHeaderName', null);
         $key = config('jsonrpcclient.connections.' . $serviceName . '.key', null);
 
         if (null === $headerToken && null !== $name && null !== $key) {
             $headerToken = [
                 'name' => $name,
-                'key'  => $key,
+                'key' => $key,
             ];
         }
 
@@ -380,8 +368,7 @@ class Client
      *
      * @return int|null
      */
-    protected function getHttpAuthScheme($scheme)
-    {
+    protected function getHttpAuthScheme($scheme) {
         switch ($scheme) {
             case self::HTTP_AUTH_NONE:
                 return null;
@@ -406,12 +393,11 @@ class Client
      * Создает новый запрос
      *
      * @param string $method
-     * @param array  $params
+     * @param array $params
      *
      * @return Request
      */
-    protected function createRequest($method, $params)
-    {
+    protected function createRequest($method, $params) {
         return new Request($this->getServiceName(), $method, $params, config('jsonrpcclient.clientName'), $this->cache);
     }
 }

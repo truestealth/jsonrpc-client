@@ -1,8 +1,12 @@
 {
-    "name": "tochka-developers/jsonrpc-client",
+    "name": "stealth/jsonrpc-client",
     "description": "JsonRpc Client for Laravel",
     "license": "MIT",
     "authors": [
+        {
+            "name": "True Stealth",
+            "email": ""
+        },
         {
             "name": "Pavel Babushkin",
             "email": "darkdarin@tochka.com"
@@ -14,10 +18,17 @@
     },
     "autoload": {
         "psr-4": {
-            "Tochka\\JsonRpcClient\\": "src/"
+            "stealth\\JsonRpcClient\\": "src/"
         },
         "files": [
             "src/helpers.php"
         ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "stealth\\JsonRpc\\Client\\ServiceProvider"
+            ]
+        }
     }
 }
