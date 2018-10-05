@@ -258,7 +258,7 @@ class Client {
             return false;
         }
 
-        $this->result(!empty($result->id) ? $result->id : null, true, $result->result, false, $result->uidd);
+        $this->result(!empty($result->id) ? $result->id : null, true, $result->result, false, $result->uuid);
 
         // если надо - кешируем результат
         if (!empty($result->id) && $this->requests[$result->id]->wantCache()) {
